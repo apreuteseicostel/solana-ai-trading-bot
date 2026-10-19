@@ -21,13 +21,14 @@ async def listen_new_tokens(
     url: str = PUMPPORTAL_WS,
     max_retries: int = 5,
     max_events: int | None = None,
+    idle_timeout: float = 30.0,
 ) -> int:
     """Read token creation events; reconnect on transport failures.
 
     Requires optional `websockets` dependency. Use max_events for bounded runs.
     No token metadata URLs are fetched or executed.
     """
-    if max_retries < 0 or (max_events is not None and max_events <= 0):
+    if max_retries < 0 or idle_timeout <= 0 or (max_events is not None and max_events <= 0):
         raise ValueError("Invalid retry or event limit")
     import websockets
 
@@ -40,7 +41,8 @@ async def listen_new_tokens(
             ) as socket:
                 await socket.send(subscribe_message())
                 failures = 0
-                async for message in socket:
+                while True:
+                    message = await asyncio.wait_for(socket.recv(), timeout=idle_timeout)
                     try:
                         payload = json.loads(message)
                     except (ValueError, TypeError):
