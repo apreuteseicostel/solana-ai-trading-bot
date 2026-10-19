@@ -2,10 +2,11 @@
 
 No network access, order execution, or wallet functionality is provided here.
 """
-from dataclasses import asdict, dataclass
 import json
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 @dataclass(frozen=True)
