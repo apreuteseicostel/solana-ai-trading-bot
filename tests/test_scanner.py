@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from solana_ai_bot.scanner import parse_token_creation, read_events, scan_file
 
 
