@@ -8,6 +8,7 @@ from .scanner import TokenCreated
 class TokenEventStore:
     def __init__(self, path: Path):
         self.path = path
+        path.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(str(path))
         self.connection.execute(
             """CREATE TABLE IF NOT EXISTS token_creations (
