@@ -17,5 +17,5 @@ def test_screen_accepts_well_shaped_fields():
 
 
 def test_screen_rejects_control_characters():
-    event = TokenCreated("A" * 32, "Bad\\nToken", "EX", "B" * 32)
+    event = TokenCreated("A" * 32, "Bad\nToken", "EX", "B" * 32)
     assert not screen_creation(event).accepted
