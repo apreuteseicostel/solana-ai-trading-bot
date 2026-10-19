@@ -6,7 +6,6 @@ from solana_ai_bot import cli
 from solana_ai_bot.collector import replay_to_sqlite
 from solana_ai_bot.storage import TokenEventStore
 
-
 EVENT = {
     "txType": "create",
     "mint": "ExampleMint111",
