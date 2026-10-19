@@ -28,18 +28,26 @@ def parse_token_creation(payload: Any) -> TokenCreated | None:
     # PumpPortal create events normally contain mint, traderPublicKey, name, symbol.
     if payload.get("txType") not in (None, "create"):
         return None
-    required = ("mint", "name", "symbol", "traderPublicKey")
+    required = ("mint", "traderPublicKey")
     if any(not isinstance(payload.get(key), str) or not payload[key].strip() for key in required):
         return None
     if any(len(payload[key]) > 256 for key in required):
+        return None
+    # Some provider creation messages omit the name and symbol metadata.
+    # Preserve the creation event, leaving unknown metadata empty.
+    name = payload.get("name", "")
+    symbol = payload.get("symbol", "")
+    if not isinstance(name, str) or not isinstance(symbol, str):
+        return None
+    if len(name) > 256 or len(symbol) > 256:
         return None
     signature = payload.get("signature")
     if signature is not None and (not isinstance(signature, str) or len(signature) > 256):
         return None
     return TokenCreated(
         mint=payload["mint"].strip(),
-        name=payload["name"].strip(),
-        symbol=payload["symbol"].strip(),
+        name=name.strip(),
+        symbol=symbol.strip(),
         creator=payload["traderPublicKey"].strip(),
         signature=signature,
     )
