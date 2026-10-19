@@ -46,3 +46,19 @@ def test_reject_same_input_output(tmp_path):
     src.write_text("", encoding="utf-8")
     with pytest.raises(ValueError):
         scan_file(src, src)
+
+
+def test_parse_creation_without_optional_metadata():
+    payload = {
+        "txType": "create",
+        "mint": "A" * 32,
+        "traderPublicKey": "B" * 32,
+    }
+    event = parse_token_creation(payload)
+    assert event is not None
+    assert event.name == ""
+    assert event.symbol == ""
+
+
+def test_reject_non_string_metadata():
+    assert parse_token_creation({**EXAMPLE, "name": 123}) is None
