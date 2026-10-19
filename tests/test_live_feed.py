@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import pytest
@@ -8,9 +9,8 @@ def test_subscription_is_read_only():
     assert json.loads(subscribe_message()) == {"method": "subscribeNewToken"}
 
 
-@pytest.mark.asyncio
-async def test_reject_invalid_limits():
+def test_reject_invalid_limits():
     with pytest.raises(ValueError):
-        await listen_new_tokens(lambda event: None, max_retries=-1)
+        asyncio.run(listen_new_tokens(lambda event: None, max_retries=-1))
     with pytest.raises(ValueError):
-        await listen_new_tokens(lambda event: None, max_events=0)
+        asyncio.run(listen_new_tokens(lambda event: None, max_events=0))
