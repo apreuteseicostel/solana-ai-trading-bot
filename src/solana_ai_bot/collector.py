@@ -16,12 +16,11 @@ def replay_to_sqlite(source: Path, database: Path) -> tuple[int, int]:
         raise ValueError("The source JSONL and SQLite database must differ")
     parsed = 0
     inserted = 0
-    with source.open("r", encoding="utf-8") as lines:
-        with TokenEventStore(database) as store:
-            for event in read_events(lines):
-                parsed += 1
-                if store.insert(event):
-                    inserted += 1
+    with source.open("r", encoding="utf-8") as lines, TokenEventStore(database) as store:
+        for event in read_events(lines):
+            parsed += 1
+            if store.insert(event):
+                inserted += 1
     return parsed, inserted
 
 
