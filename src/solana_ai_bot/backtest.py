@@ -79,7 +79,7 @@ def _validate(config: BacktestConfig, ticks: list[PriceTick]) -> None:
         previous = tick.timestamp
 
 
-def run_sma_backtest(ticks: list[PriceTick], config: BacktestConfig = BacktestConfig()) -> BacktestResult:
+def run_sma_backtest(ticks: list[PriceTick], config: BacktestConfig | None = None) -> BacktestResult:
     """Long-only SMA crossover, filling decisions at the next observation.
 
     Buying spends a fixed fraction of available cash INCLUDING the buy fee.
@@ -87,6 +87,8 @@ def run_sma_backtest(ticks: list[PriceTick], config: BacktestConfig = BacktestCo
     Open holdings are estimated at an immediate liquidation price in the
     final metric, but they are never force-sold by this simulation.
     """
+    if config is None:
+        config = BacktestConfig()
     _validate(config, ticks)
     cash = float(config.starting_cash)
     units = 0.0
