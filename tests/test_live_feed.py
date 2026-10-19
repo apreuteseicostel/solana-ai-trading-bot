@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import pytest
+
 from solana_ai_bot.live_feed import listen_new_tokens, subscribe_message
 
 
