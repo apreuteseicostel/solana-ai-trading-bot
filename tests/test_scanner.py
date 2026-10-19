@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from solana_ai_bot.scanner import parse_token_creation, read_events, scan_file
 
 
@@ -43,7 +45,5 @@ def test_scan_file(tmp_path):
 def test_reject_same_input_output(tmp_path):
     src = tmp_path / "input.jsonl"
     src.write_text("", encoding="utf-8")
-    import pytest
-
     with pytest.raises(ValueError):
         scan_file(src, src)
