@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Signal Desk · Paper research</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-icon">S</span> Signal Desk<span class="version">01</span></a>
+    <div class="workspace"><span class="workspace-icon">↗</span><div>Research workspace<small>Solana · USDC paper book</small></div></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation">
+      <a href="#overview" data-view="overview" class="active"><span>◫</span> Overview</a>
+      <a href="#positions" data-view="positions"><span>▤</span> Paper positions</a>
+      <a href="#wallets" data-view="wallets"><span>◎</span> Wallet observations</a>
+      <a href="#decisions" data-view="decisions"><span>≋</span> Decision journal</a>
+      <a href="#limits" data-view="limits"><span>⚙</span> Experiment limits</a>
+    </nav>
+    <div class="sidebar-bottom"><span class="mode-dot"></span> Observation & simulation<small>No live order execution</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><span>WORKSPACE <span class="slash">/</span> <span id="breadcrumb">Overview</span></span><span class="paper-badge">PAPER ONLY</span></header>
+    <div class="content">
+      <div class="page-heading"><div><p class="eyebrow">MARKET INTELLIGENCE</p><h1 id="page-title">Research overview</h1><p id="page-description">Follow observations. Inspect decisions. Measure the experiment.</p></div><div class="actions"><label class="sr-only" for="run">Paper experiment</label><select id="run" aria-label="Paper experiment"></select><button id="refresh">↻ <span>Refresh snapshot</span></button></div></div>
+      <div class="notice" id="provenance"><span class="notice-icon">i</span><span>Loading experiment provenance…</span></div>
+      <div id="error" role="alert" hidden></div>
+      <div id="loading" role="status">Reading the local paper book…</div>
+      <div id="dashboard" hidden>
+        <section id="overview" class="view">
+          <div class="metrics" id="metrics"></div>
+          <div class="overview-grid">
+            <section class="panel"><div class="panel-heading"><div><h2>Decision outcomes</h2><p>Latest decisions in this experiment</p></div><span class="tag">SIMULATED</span></div><div id="outcomes" class="outcomes"></div><div class="outcome-legend" id="outcome-legend"></div><div class="panel-footer">Rejections explain the engine's filters. Fills are hypothetical.</div></section>
+            <section class="panel"><div class="panel-heading"><div><h2>Data observability</h2><p>Database-wide collection indicators</p></div><span class="status-neutral">UNVERIFIED</span></div><dl class="observability" id="observability"></dl><div class="panel-footer">No collector heartbeat is available. Recent data does not prove a collector is running.</div></section>
+          </div>
+          <section class="panel"><div class="panel-heading"><div><h2>Recent decisions</h2><p>The reason behind every simulated action</p></div><a href="#decisions" class="text-link">Open journal ↗</a></div><div class="table-scroll" id="recent-table"></div></section>
+          <div class="footnote">Research in progress. Network costs are estimates; provider billing is excluded. Simulated results do not establish future profitability.</div>
+        </section>
+        <section id="positions" class="view" hidden><div class="section-note">Atomic token quantities are shown without assuming mint decimals. Liquidation values require fresh quotes.</div><div class="panel table-scroll" id="positions-table"></div></section>
+        <section id="wallets" class="view" hidden><div class="section-note">Latest database-wide observations, across all experiments. This is an observation log, not a wallet ranking.</div><div class="panel table-scroll" id="wallets-table"></div></section>
+        <section id="decisions" class="view" hidden><div class="toolbar"><label for="search">Search journal</label><input id="search" placeholder="Signature, wallet or reason…" type="search"><label for="status">Status</label><select id="status"><option value="all">All decisions</option><option value="filled">Simulated fills</option><option value="rejected">Rejected</option></select><button id="export">Export visible JSON</button></div><p id="decision-count" class="section-note"></p><div class="panel table-scroll" id="decisions-table"></div></section>
+        <section id="limits" class="view" hidden><div class="section-note">Immutable settings recorded with this experiment. Changing a running paper book is not supported by this interface.</div><div class="panel"><div class="panel-heading"><h2>Recorded experiment limits</h2><span class="tag">READ ONLY</span></div><dl id="config" class="config-grid"></dl></div></section>
+      </div>
+      <footer><span><span class="mode-dot"></span> Local read-only dashboard</span><span id="updated">Awaiting snapshot</span></footer>
+    </div>
+  </main>
+</body>
+</html>
