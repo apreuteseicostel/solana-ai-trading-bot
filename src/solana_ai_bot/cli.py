@@ -5,6 +5,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from . import intel_cli
 from .backtest import BacktestConfig, run_sma_backtest
 from .collector import collect_to_sqlite, replay_to_sqlite
 from .market_data import load_price_csv
@@ -36,11 +37,14 @@ def build_parser() -> argparse.ArgumentParser:
     backtest.add_argument("--fraction", type=float, default=0.1)
     backtest.add_argument("--fee-rate", type=float, default=0.01)
     backtest.add_argument("--slippage-rate", type=float, default=0.005)
+    intel_cli.add_commands(commands)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "intel":
+        return intel_cli.run(args)
     if args.command == "replay":
         observed, new = replay_to_sqlite(args.source, args.db)
         print(f"Parsed distinct events: {observed}; newly saved: {new}")
