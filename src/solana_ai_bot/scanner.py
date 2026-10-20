@@ -72,9 +72,10 @@ def scan_file(source: Path, destination: Path) -> int:
     if source.resolve() == destination.resolve():
         raise ValueError("Input and output must differ")
     with source.open("r", encoding="utf-8") as input_stream:
-        events = list(read_events(input_stream))
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("w", encoding="utf-8") as output_stream:
-        for event in events:
-            output_stream.write(event.to_json() + "\n")
-    return len(events)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        count = 0
+        with destination.open("w", encoding="utf-8") as output_stream:
+            for event in read_events(input_stream):
+                output_stream.write(event.to_json() + "\n")
+                count += 1
+    return count
