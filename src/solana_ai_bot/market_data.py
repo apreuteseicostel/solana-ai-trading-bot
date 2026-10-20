@@ -17,9 +17,12 @@ def load_price_csv(path: Path, *, max_rows: int = 100_000) -> tuple[str, list[Pr
     current_mint: str | None = None
     with path.open("r", encoding="utf-8", newline="") as source:
         reader = csv.DictReader(source)
-        if reader.fieldnames is None or set(reader.fieldnames) != {"mint", "timestamp", "price"}:
+        if (reader.fieldnames is None or len(reader.fieldnames) != 3
+                or set(reader.fieldnames) != {"mint", "timestamp", "price"}):
             raise ValueError("CSV requires exactly: mint,timestamp,price")
         for row in reader:
+            if None in row or any(value is None for value in row.values()):
+                raise ValueError("CSV row must match its three columns exactly")
             if len(ticks) >= max_rows:
                 raise ValueError("CSV exceeded max_rows")
             mint = row.get("mint")
