@@ -8,3 +8,6 @@ __pycache__/
 !.env.example
 *.key
 *.pem
+*.egg-info/
+*.sqlite*
+data/
