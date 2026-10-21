@@ -1,0 +1,2 @@
+{"txType":"create","mint":"ExampleMint111","name":"Demo token","symbol":"DEMO","traderPublicKey":"ExampleCreator111","signature":"ExampleSignature111"}
+{"txType":"buy","mint":"ExampleMint111","traderPublicKey":"ExampleBuyer111"}
