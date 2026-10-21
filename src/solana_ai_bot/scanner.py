@@ -62,24 +62,25 @@ def read_events(lines: Iterable[str]) -> Iterable[TokenCreated]:
     RAM no longer grows with the number of distinct mints; temporary disk
     usage does. Exhaust or close the iterator to release its temporary files.
     """
-    with TemporaryDirectory(prefix="solana-mint-dedup-") as directory:
-        with closing(sqlite3.connect(str(Path(directory) / "seen.sqlite"))) as db:
-            db.execute("PRAGMA cache_size = -1024")
-            db.execute("CREATE TABLE seen_mints (mint TEXT PRIMARY KEY)")
-            for line in lines:
-                try:
-                    payload = json.loads(line)
-                except (ValueError, TypeError):
-                    continue
-                event = parse_token_creation(payload)
-                if event is None:
-                    continue
-                cursor = db.execute(
-                    "INSERT OR IGNORE INTO seen_mints (mint) VALUES (?)",
-                    (event.mint,),
-                )
-                if cursor.rowcount == 1:
-                    yield event
+    with TemporaryDirectory(prefix="solana-mint-dedup-") as directory, closing(
+        sqlite3.connect(str(Path(directory) / "seen.sqlite"))
+    ) as db:
+        db.execute("PRAGMA cache_size = -1024")
+        db.execute("CREATE TABLE seen_mints (mint TEXT PRIMARY KEY)")
+        for line in lines:
+            try:
+                payload = json.loads(line)
+            except (ValueError, TypeError):
+                continue
+            event = parse_token_creation(payload)
+            if event is None:
+                continue
+            cursor = db.execute(
+                "INSERT OR IGNORE INTO seen_mints (mint) VALUES (?)",
+                (event.mint,),
+            )
+            if cursor.rowcount == 1:
+                yield event
 
 
 def scan_file(source: Path, destination: Path) -> int:
