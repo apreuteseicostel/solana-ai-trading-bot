@@ -1,5 +1,14 @@
 # Roadmap
 
+## Priority 0 — web frontend
+
+- [x] Local responsive read-only paper dashboard (see `docs/WEB_DASHBOARD.md`)
+- [ ] Browser/accessibility review and authenticated hosting design
+- [ ] Token observation view and collector heartbeat
+- [ ] Reviewed paper-experiment configuration workflow
+
+## Research and ingestion
+
 - [x] Simulation-only trading arithmetic
 - [x] Unit tests and GitHub Actions CI
 - [ ] Audit Chainstack upstream code and license before reuse

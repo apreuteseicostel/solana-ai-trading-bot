@@ -18,3 +18,14 @@ Open `data/demo.html` for a synthetic demonstration, not a performance claim.
 
 Development: `ruff check .` and `pytest -q`. Provider credentials are optional for offline
 work and are required only for explicitly requested read-only live-data sessions.
+
+
+## Paper research dashboard (priority 0)
+
+```sh
+python -m solana_ai_bot.dashboard --demo
+```
+
+Open http://127.0.0.1:8765 for an isolated synthetic demo, or pass `--db`
+with an existing intelligence database. Local, read-only, no provider calls or
+live execution. See [dashboard documentation](docs/WEB_DASHBOARD.md).
