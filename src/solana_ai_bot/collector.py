@@ -28,8 +28,7 @@ def replay_to_sqlite(source: Path, database: Path) -> tuple[int, int]:
     with source.open("r", encoding="utf-8") as lines, TokenEventStore(database) as store:
         for event in read_events(lines):
             parsed += 1
-            annotate_quality(event)
-            if store.insert(event):
+            if store.insert(event, quality=annotate_quality(event)):
                 inserted += 1
     return parsed, inserted
 
@@ -46,8 +45,7 @@ async def collect_to_sqlite(
     database.parent.mkdir(parents=True, exist_ok=True)
     with TokenEventStore(database) as store:
         def store_observation(event):
-            annotate_quality(event)
-            return store.insert(event)
+            return store.insert(event, quality=annotate_quality(event))
 
         options = {"max_events": max_events}
         if url is not None:
