@@ -2,8 +2,17 @@
 from pathlib import Path
 
 from .live_feed import listen_new_tokens
+from .risk import screen_creation
 from .scanner import read_events
 from .storage import TokenEventStore
+
+
+def annotate_quality(event):
+    """Return a data-quality annotation without blocking observation storage.
+
+    This is not fraud detection, token safety certification, or a trade signal.
+    """
+    return screen_creation(event)
 
 
 def replay_to_sqlite(source: Path, database: Path) -> tuple[int, int]:
@@ -19,6 +28,7 @@ def replay_to_sqlite(source: Path, database: Path) -> tuple[int, int]:
     with source.open("r", encoding="utf-8") as lines, TokenEventStore(database) as store:
         for event in read_events(lines):
             parsed += 1
+            annotate_quality(event)
             if store.insert(event):
                 inserted += 1
     return parsed, inserted
@@ -35,7 +45,11 @@ async def collect_to_sqlite(
         raise ValueError("max_events must be positive")
     database.parent.mkdir(parents=True, exist_ok=True)
     with TokenEventStore(database) as store:
+        def store_observation(event):
+            annotate_quality(event)
+            return store.insert(event)
+
         options = {"max_events": max_events}
         if url is not None:
             options["url"] = url
-        return await listen_new_tokens(store.insert, **options)
+        return await listen_new_tokens(store_observation, **options)
