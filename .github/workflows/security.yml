@@ -1,0 +1,22 @@
+name: Security hygiene
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '17 7 * * 1'
+permissions:
+  contents: read
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Upgrade build tooling to patched setuptools
+        run: python -m pip install --upgrade 'setuptools>=83.0.0' wheel
+      - name: Install project and audit dependencies
+        run: python -m pip install -e '.[dev]' 'pip-audit>=2.7,<3'
+      - name: Audit installed Python dependencies
+        run: python -m pip_audit

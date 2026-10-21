@@ -1,0 +1,25 @@
+name: AutoDev task
+description: Scoped implementation task for ChatGPT/Codex
+labels: []
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: Describe the measurable outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Include testable success conditions.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and exclusions
+      value: No live trades, no private keys, no automatic merge.
+    validations:
+      required: true
