@@ -10,6 +10,7 @@ python -m solana_ai_bot intel demo --db data/demo.sqlite --run-id demo --html da
 
 Open `data/demo.html` for a synthetic demonstration, not a performance claim.
 
+- [Research Suite: Trend, DCA, reports and token inspection](docs/RESEARCH_SUITE.md): offline calculations and unverified-source warnings, zero live trading.
 - [SIGNAL history + PAPER AUTO status](docs/SIGNAL_PAPER_AUTO.md): read-only historical signal journal and bounded paper loop visibility; no live order routing.
 - [Market Intelligence V1](docs/MARKET_INTELLIGENCE.md): Helius wallet history,
   Jupiter quote collection, USDC paper-copy experiments, risk limits and reports.

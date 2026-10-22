@@ -17,6 +17,10 @@
       <a href="#overview" data-view="overview" class="active"><span>◫</span> Overview</a>
       <a href="#signals" data-view="signals"><span>⚡</span> SIGNAL history</a>
       <a href="#paper-auto" data-view="paper-auto"><span>◉</span> PAPER AUTO status</a>
+      <a href="#trend" data-view="trend"><span>⌁</span> Trend following</a>
+      <a href="#dca" data-view="dca"><span>▥</span> DCA / Rebalance</a>
+      <a href="#assistant" data-view="assistant"><span>✧</span> Research assistant</a>
+      <a href="#token" data-view="token"><span>⬡</span> Token scanner</a>
       <a href="#positions" data-view="positions"><span>▤</span> Paper positions</a>
       <a href="#wallets" data-view="wallets"><span>◎</span> Wallet observations</a>
       <a href="#decisions" data-view="decisions"><span>≋</span> Decision journal</a>
@@ -43,6 +47,42 @@
         </section>
         <section id="signals" class="view" hidden><div class="section-note">Retrospective records only. A simulated historical BUY is not a current buy recommendation. No automated signal alerts or order execution are available.</div><div class="panel"><div class="panel-heading"><div><h2>Recorded SIGNAL history</h2><p>Selected paper run · bounded to the latest 200 decisions</p></div><span class="tag">NON-ACTIONABLE</span></div><div class="table-scroll" id="signals-table"></div></div></section>
         <section id="paper-auto" class="view" hidden><div class="section-note">PAPER AUTO is an existing bounded CLI research loop. This page cannot start, pause or stop a background process. Live trading remains disabled.</div><div class="panel"><div class="panel-heading"><div><h2>PAPER AUTO — process status</h2><p>Read-only operational truth, no inferred heartbeat</p></div><span class="status-neutral">NO HEARTBEAT</span></div><dl class="observability" id="paper-auto-info"></dl><div class="panel-footer">CLI entry point: intel watch-paper. Requires explicitly configured read-only provider access. Existing paper decisions do not prove a collector is currently running.</div></div></section>
+        <section id="trend" class="view" hidden>
+          <div class="section-note">SMA trend following uses the existing next-observation backtest engine. Only labelled synthetic fixture data are available in demo mode; no live signals or execution.</div>
+          <div class="panel"><div class="panel-heading"><div><h2>Trend-following laboratory</h2><p>Offline evidence only · no Freqtrade order connection</p></div><span class="tag">BACKTEST ONLY</span></div><dl id="trend-results" class="observability"></dl><div class="panel-footer">Do not infer profitability from a synthetic run. Provider price history, out-of-sample tests and actual network/priority costs are still required.</div></div>
+        </section>
+        <section id="dca" class="view" hidden>
+          <div class="section-note">DCA and rebalancing are estimates based on the portfolio values you type. No wallet balances, quote prices or orders are fetched.</div>
+          <div class="panel">
+            <div class="panel-heading"><div><h2>Allocation planner · USDC estimates</h2><p>Calculator-only backend · never schedules or submits swaps</p></div><span class="tag">PREVIEW ONLY</span></div>
+            <div class="tool-grid">
+              <div><label for="dca-mode">Planning mode</label><select id="dca-mode"><option value="dca">DCA (buys only)</option><option value="rebalance">Rebalance (hypothetical buys + sells)</option></select></div>
+              <div><label for="dca-contribution">Additional USDC</label><input id="dca-contribution" type="number" min="0" max="1000000" step="0.01" value="100"></div>
+              <div><label for="dca-sol">Current SOL value · USDC</label><input id="dca-sol" type="number" min="0" max="1000000000" step="0.01" value="400"></div>
+              <div><label for="dca-usdc">Current USDC value</label><input id="dca-usdc" type="number" min="0" max="1000000000" step="0.01" value="600"></div>
+              <div><label for="dca-target-sol">Target SOL (%)</label><input id="dca-target-sol" type="number" min="0" max="100" step="1" value="50"></div>
+              <div><label for="dca-target-usdc">Target USDC (%)</label><input id="dca-target-usdc" type="number" min="0" max="100" step="1" value="50"></div>
+            </div>
+            <button id="dca-preview" type="button">Calculate preview</button><p id="dca-message" class="section-note" role="status">No orders will be placed.</p>
+            <div class="table-scroll" id="dca-results"></div>
+            <div class="panel-footer">Illustrative values only. Fees, slippage, taxes and execution gaps are unknown. No scheduled DCA job has been enabled.</div>
+          </div>
+        </section>
+        <section id="assistant" class="view" hidden>
+          <div class="section-note">Research summary derived from the selected run's recorded facts. External LLM, chat, daily scheduling and push alerts are NOT connected.</div>
+          <div class="panel"><div class="panel-heading"><div><h2>Research brief</h2><p>Rules-based briefing · no external AI API charges</p></div><span class="tag">NO LLM CONNECTED</span></div><dl class="observability" id="assistant-results"></dl><div id="assistant-messages" class="tool-notes"></div><div class="panel-footer">Before connecting an LLM: protect API tokens on the server, limit requests/costs, cache repeat prompts, store report provenance, and never let generated text place orders.</div></div>
+        </section>
+        <section id="token" class="view" hidden>
+          <div class="section-note">Paste a Solana token mint. Without verifiable live RPC data, authority, liquidity depth and holder concentration are UNKNOWN. Optional pasted jsonParsed getAccountInfo data are explicitly UNVERIFIED.</div>
+          <div class="panel">
+            <div class="panel-heading"><div><h2>Token safety research · local parser</h2><p>No provider queries, no trading recommendations, no wallet connection</p></div><span class="tag">READ ONLY</span></div>
+            <label for="token-mint">Token mint address</label><input id="token-mint" type="text" maxlength="44" placeholder="Paste a 32-byte Solana base58 mint" autocomplete="off" spellcheck="false">
+            <label for="token-rpc">Optional jsonParsed getAccountInfo response (unverified user-supplied evidence)</label><textarea id="token-rpc" rows="6" spellcheck="false" placeholder='{"result":{"value":{"owner":"...","data":{"parsed":{"type":"mint","info":{"mintAuthority":null,"freezeAuthority":null,"decimals":6,"supply":"1"}}}}}}'></textarea>
+            <button id="token-inspect" type="button">Inspect locally</button><p id="token-message" class="section-note" role="status">No live Solana RPC connection is configured.</p>
+            <dl class="observability" id="token-results"></dl><div class="tool-notes" id="token-warnings"></div>
+            <div class="panel-footer">Mint/freeze authority alone cannot establish that a token is safe; Token-2022 extensions, holder concentration, liquidity and contract/market behaviour require additional independent checks.</div>
+          </div>
+        </section>
         <section id="positions" class="view" hidden><div class="section-note">Atomic token quantities are shown without assuming mint decimals. Liquidation values require fresh quotes.</div><div class="panel table-scroll" id="positions-table"></div></section>
         <section id="wallets" class="view" hidden><div class="section-note">Latest database-wide observations, across all experiments. This is an observation log, not a wallet ranking.</div><div class="panel table-scroll" id="wallets-table"></div></section>
         <section id="decisions" class="view" hidden><div class="toolbar"><label for="search">Search journal</label><input id="search" placeholder="Signature, wallet or reason…" type="search"><label for="status">Status</label><select id="status"><option value="all">All decisions</option><option value="filled">Simulated fills</option><option value="rejected">Rejected</option></select><button id="export">Export visible JSON</button></div><p id="decision-count" class="section-note"></p><div class="panel table-scroll" id="decisions-table"></div></section>

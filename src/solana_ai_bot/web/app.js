@@ -5,6 +5,10 @@ const titles = {
   overview: ['Research overview', 'Follow observations. Inspect decisions. Measure the experiment.'],
   signals: ['SIGNAL history', 'Review historic simulated decisions; not live trade alerts.'],
   'paper-auto': ['PAPER AUTO status', 'Inspect bounded paper simulation and its unknown process health.'],
+  trend: ['Trend following', 'Inspect an SMA experiment only when actual price provenance is available.'],
+  dca: ['DCA / Rebalancing', 'Calculate indicative allocations without wallet access or trading.'],
+  assistant: ['Research assistant', 'Read a rules-based summary from the selected experiment.'],
+  token: ['Token scanner', 'Review evidence without making an unverified safety claim.'],
   positions: ['Paper positions', 'Inspect simulated exposure and the freshness of liquidation marks.'],
   wallets: ['Wallet observations', 'Inspect recorded activity with its original data source.'],
   decisions: ['Decision journal', 'Trace simulated fills and rejected signals to their reasons.'],
@@ -114,11 +118,105 @@ function render() {
   keyValue($('paper-auto-info'), 'Dataset origin', human(mode));
   keyValue($('paper-auto-info'), 'Paper entry halt', s.halted ? 'Latched by risk engine' : 'Not latched in recorded run');
   keyValue($('paper-auto-info'), 'Current liquidation equity', data.equity_raw == null ? 'Unknown · no fresh marks' : money(data.equity_raw) + ' USDC');
+  renderResearch();
   $('config').replaceChildren();
   Object.entries(data.config).forEach(([key, value]) => keyValue($('config'), human(key), key.endsWith('_raw') ? `${money(value)} USDC` : key.endsWith('_bps') ? `${value / 100}%` : String(value)));
   $('updated').textContent = `Snapshot · ${date(data.generated_at)}${data.observations_truncated ? ' · Latest 200 observations shown' : ''}`;
   renderJournal();
 }
+function renderResearch() {
+  const research = data.research || {};
+  const trend = research.trend || {};
+  $('trend-results').replaceChildren();
+  if (!trend.available) {
+    keyValue($('trend-results'), 'Result', trend.reason || 'No verified price series is available.');
+    keyValue($('trend-results'), 'Data source', 'Unavailable · not simulated as a live signal');
+  } else {
+    keyValue($('trend-results'), 'Dataset', 'SYNTHETIC FIXTURE · 24 observations');
+    keyValue($('trend-results'), 'SMA windows', 'Fast 3 · Slow 6');
+    keyValue($('trend-results'), 'Retrospective trend', human(trend.latest_retrospective_trend));
+    keyValue($('trend-results'), 'Estimated final capital', String(trend.estimated_final_equity_usdc) + ' USDC');
+    keyValue($('trend-results'), 'Estimated net P&L', String(trend.estimated_net_pnl_usdc) + ' USDC');
+    keyValue($('trend-results'), 'Maximum observed drawdown', String(trend.max_drawdown_pct) + '%');
+    keyValue($('trend-results'), 'Closed simulated trades', trend.closed_paper_trades);
+    keyValue($('trend-results'), 'Market order execution', 'Disabled');
+  }
+  const brief = research.brief || {};
+  $('assistant-results').replaceChildren();
+  keyValue($('assistant-results'), 'Research engine', 'Deterministic rules; NOT an LLM');
+  keyValue($('assistant-results'), 'Run', brief.run_id || 'Unavailable');
+  keyValue($('assistant-results'), 'Data provenance', human(brief.source));
+  keyValue($('assistant-results'), 'Recorded decisions', brief.recorded_decision_count ?? 'Unknown');
+  keyValue($('assistant-results'), 'Simulated fills', brief.paper_fills ?? 'Unknown');
+  keyValue($('assistant-results'), 'Rejected observations', brief.rejections ?? 'Unknown');
+  keyValue($('assistant-results'), 'Equity mark available', brief.equity_available ? 'Yes' : 'No / stale');
+  keyValue($('assistant-results'), 'External LLM', 'Not connected; no API request made');
+  $('assistant-messages').replaceChildren(...(brief.messages || []).map(msg => el('p', msg)));
+}
+async function localCalculation(endpoint, payload) {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error('Inputs were rejected or the local preview is unavailable.');
+  return response.json();
+}
+let dcaBusy = false;
+$('dca-preview').addEventListener('click', async () => {
+  if (dcaBusy) return;
+  dcaBusy = true; $('dca-preview').disabled = true;
+  $('dca-message').textContent = 'Calculating a local, non-executable preview…';
+  $('dca-results').replaceChildren();
+  const payload = {
+    mode: $('dca-mode').value,
+    contribution_usdc: $('dca-contribution').value,
+    holdings: {SOL: $('dca-sol').value, USDC: $('dca-usdc').value},
+    targets: {SOL: $('dca-target-sol').value, USDC: $('dca-target-usdc').value},
+  };
+  try {
+    const result = await localCalculation('/api/dca/preview', payload);
+    table('dca-results', ['Asset', 'Current (USDC)', 'Target %', 'Target value', 'Hypothetical change', 'Action'],
+      result.rows.map(row => [row.asset, row.current_value_usdc, row.target_pct + '%',
+        row.target_value_usdc, row.delta_usdc + ' USDC', human(row.action)]),
+      'No allocation change.');
+    $('dca-message').textContent = 'Preview only · ' + result.mode +
+      ' · planned net: ' + result.planned_net_usdc +
+      ' USDC · execution costs unknown · zero orders submitted.';
+  } catch {
+    $('dca-message').textContent = 'Invalid plan. Enter finite positive asset values, target weights totalling 100%, and a valid contribution.';
+  } finally {dcaBusy = false; $('dca-preview').disabled = false;}
+});
+let tokenBusy = false;
+$('token-inspect').addEventListener('click', async () => {
+  if (tokenBusy) return;
+  tokenBusy = true; $('token-inspect').disabled = true;
+  $('token-results').replaceChildren();
+  $('token-warnings').replaceChildren();
+  $('token-message').textContent = 'Validating locally…';
+  try {
+    const payload = {mint: $('token-mint').value.trim()};
+    const raw = $('token-rpc').value.trim();
+    if (raw) {
+      if (raw.length > 12000) throw new Error('Evidence too large');
+      payload.rpc_response = JSON.parse(raw);
+    }
+    const result = await localCalculation('/api/token/inspect', payload);
+    keyValue($('token-results'), 'Mint', result.mint);
+    keyValue($('token-results'), 'Evidence origin', human(result.provenance));
+    keyValue($('token-results'), 'Mint authority active', result.mint_authority_active === null ? 'Unknown' : String(result.mint_authority_active));
+    keyValue($('token-results'), 'Freeze authority active', result.freeze_authority_active === null ? 'Unknown' : String(result.freeze_authority_active));
+    keyValue($('token-results'), 'Token program', result.token_program || 'Unknown');
+    keyValue($('token-results'), 'Liquidity depth', 'Unknown · no verified pool quote');
+    keyValue($('token-results'), 'Holder concentration', 'Unknown · no verified holder snapshot');
+    $('token-warnings').replaceChildren(...result.warnings.map(w => el('p', w)));
+    $('token-message').textContent = 'Read-only report · no blockchain query · no token safety verdict.';
+  } catch {
+    $('token-message').textContent = 'Invalid Solana mint or unsupported jsonParsed RPC evidence. No scan result was generated.';
+  } finally {tokenBusy = false; $('token-inspect').disabled = false;}
+});
 async function refresh() {
   if (busy) return;
   busy = true; $('refresh').disabled = true; $('error').hidden = true;

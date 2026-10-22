@@ -11,6 +11,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlsplit
 
+from .research_suite import dca_preview, inspect_token, research_brief, trend_research
 from .signal_feed import signal_feed
 
 MAX_ROWS = 200
@@ -56,7 +57,7 @@ def snapshot(database: Path, run_id: str | None = None, *, now: int | None = Non
             "SELECT host,COUNT(*) FROM provider_requests GROUP BY host LIMIT 20"
         )}
         latest = db.execute("SELECT MAX(observed_at) FROM wallet_events").fetchone()[0]
-        return {
+        response = {
             "schema_version": 1, "generated_at": now, "read_only": True,
             "live_execution_available": False, "run_id": run_id,
             "runs": runs[:MAX_ROWS], "runs_truncated": len(runs) > MAX_ROWS,
@@ -82,6 +83,15 @@ def snapshot(database: Path, run_id: str | None = None, *, now: int | None = Non
             "provider_usage": {"scope": "whole_database_all_runs",
                                "requests_by_host": usage, "api_cost_usdc": None},
         }
+        response["research"] = {
+            "trend": trend_research(state.get("dataset_mode")),
+            "brief": research_brief(response),
+            "dca": {"status": "preview_only", "wallet_balances_connected": False},
+            "token_scanner": {"status": "user_supplied_evidence_only",
+                              "live_rpc_connected": False},
+            "llm": {"connected": False, "provider_calls": 0},
+        }
+        return response
 
 
 def handler_for(database: Path):
@@ -121,6 +131,43 @@ def handler_for(database: Path):
                     self.respond(503, b'{"error":"Snapshot unavailable; check database schema"}', "application/json")
             else:
                 self.respond(404, b'{"error":"Not found"}', "application/json")
+
+        def do_POST(self):
+            # Read-only computations, not commands or order-routing endpoints.
+            if self.path not in ("/api/dca/preview", "/api/token/inspect"):
+                self.respond(501, b'{"error":"Write methods unavailable"}', "application/json")
+                return
+            if self.headers.get("Host") != f"127.0.0.1:{self.server.server_port}":
+                self.respond(403, b'{"error":"Local host required"}', "application/json")
+                return
+            origin = self.headers.get("Origin")
+            if origin and origin != f"http://127.0.0.1:{self.server.server_port}":
+                self.respond(403, b'{"error":"Cross-origin request refused"}', "application/json")
+                return
+            if self.headers.get("Transfer-Encoding") or (
+                self.headers.get("Content-Type", "").split(";")[0].strip()
+                != "application/json"
+            ):
+                self.respond(415, b'{"error":"JSON content type required"}', "application/json")
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = 0
+            if not 1 <= length <= 16384:
+                self.respond(413, b'{"error":"Invalid or oversized request"}', "application/json")
+                return
+            try:
+                payload = json.loads(self.rfile.read(length))
+                result = (
+                    dca_preview(payload) if self.path == "/api/dca/preview"
+                    else inspect_token(payload)
+                )
+            except (ValueError, TypeError, KeyError, OverflowError):
+                self.respond(400, b'{"error":"Invalid inputs or unsupported evidence"}',
+                             "application/json")
+                return
+            self.respond(200, json.dumps(result).encode(), "application/json")
 
         def respond(self, status, content, mime):
             self.send_response(status)
