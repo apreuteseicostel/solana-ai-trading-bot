@@ -3,6 +3,8 @@ let data = null;
 let busy = false;
 const titles = {
   overview: ['Research overview', 'Follow observations. Inspect decisions. Measure the experiment.'],
+  signals: ['SIGNAL history', 'Review historic simulated decisions; not live trade alerts.'],
+  'paper-auto': ['PAPER AUTO status', 'Inspect bounded paper simulation and its unknown process health.'],
   positions: ['Paper positions', 'Inspect simulated exposure and the freshness of liquidation marks.'],
   wallets: ['Wallet observations', 'Inspect recorded activity with its original data source.'],
   decisions: ['Decision journal', 'Trace simulated fills and rejected signals to their reasons.'],
@@ -96,6 +98,22 @@ function render() {
   table('recent-table', ['Signature', 'Data source', 'Status', 'Side', 'Reason'], decisionRows(data.recent_decisions.slice(0, 5)), 'No decisions recorded. Run a paper experiment to populate this journal.');
   table('positions-table', ['Mint', 'Wallet', 'Quantity · atomic units', 'Cost · USDC', 'Liquidation · USDC', 'Quote time'], Object.values(s.positions).map(p => [identifier(p.mint), identifier(p.wallet), String(p.quantity_raw), money(p.cost_raw), p.marked_at != null && data.generated_at - p.marked_at >= 0 && data.generated_at - p.marked_at <= data.config.max_quote_age_seconds ? money(p.liquidation_raw) : 'Unknown · stale/missing', date(p.marked_at)]), 'No open paper positions in this experiment.');
   table('wallets-table', ['Wallet', 'Signature', 'Kind', 'Data source', 'Observed at'], data.observations.map(o => [identifier(o.wallet), identifier(o.signature), human(o.kind), human(o.source), date(o.observed_at)]), 'No wallet observations stored.');
+  table('signals-table',
+    ['Signature', 'Recorded at', 'Provenance', 'Outcome', 'Side', 'Reason'],
+    (data.signal_feed || []).map(row => [
+      identifier(row.signature), date(row.at), human(row.source),
+      human(row.classification), row.side || '—', human(row.reason),
+    ]),
+    'No recorded SIGNAL history. This page does not generate live buy alerts.'
+  );
+  $('paper-auto-info').replaceChildren();
+  keyValue($('paper-auto-info'), 'Mode', 'PAPER ONLY · bounded CLI session');
+  keyValue($('paper-auto-info'), 'Process health', 'Unknown · no heartbeat or scheduler');
+  keyValue($('paper-auto-info'), 'Started from dashboard', 'Not supported · read-only');
+  keyValue($('paper-auto-info'), 'Live order execution', 'Disabled');
+  keyValue($('paper-auto-info'), 'Dataset origin', human(mode));
+  keyValue($('paper-auto-info'), 'Paper entry halt', s.halted ? 'Latched by risk engine' : 'Not latched in recorded run');
+  keyValue($('paper-auto-info'), 'Current liquidation equity', data.equity_raw == null ? 'Unknown · no fresh marks' : money(data.equity_raw) + ' USDC');
   $('config').replaceChildren();
   Object.entries(data.config).forEach(([key, value]) => keyValue($('config'), human(key), key.endsWith('_raw') ? `${money(value)} USDC` : key.endsWith('_bps') ? `${value / 100}%` : String(value)));
   $('updated').textContent = `Snapshot · ${date(data.generated_at)}${data.observations_truncated ? ' · Latest 200 observations shown' : ''}`;
@@ -110,7 +128,7 @@ async function refresh() {
     const response = await fetch(`/api/snapshot${query}`, {cache: 'no-store', signal: AbortSignal.timeout(10000)});
     if (!response.ok) throw new Error('Snapshot unavailable');
     const next = await response.json();
-    if (next.schema_version !== 1 || !Array.isArray(next.recent_decisions) || !next.state) throw new Error('Unsupported snapshot');
+    if (next.schema_version !== 1 || !Array.isArray(next.recent_decisions) || !Array.isArray(next.signal_feed) || !next.paper_auto || !next.state) throw new Error('Unsupported snapshot');
     data = next;
     $('run').replaceChildren(...data.runs.map(run => { const option = el('option', run); option.value = run; return option; }));
     $('run').value = data.run_id;
