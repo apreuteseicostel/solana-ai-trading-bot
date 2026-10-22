@@ -23,6 +23,14 @@ book and deletes it on shutdown. The demo is always labelled synthetic and never
 contacts a provider. An existing database is opened with SQLite `mode=ro` and
 `query_only=ON`; an absent database or run is never created by the read API.
 
+## SIGNAL / PAPER AUTO increment
+
+The dashboard now displays a non-actionable historical SIGNAL journal mapped from
+recorded paper decisions, and a PAPER AUTO status panel explicitly labelled
+`unknown_no_heartbeat`. These views do not initiate simulations, monitor a
+background process, stream fresh market alerts or execute orders. See
+[SIGNAL and PAPER AUTO](SIGNAL_PAPER_AUTO.md).
+
 ## Included
 
 - Overview: simulated cash, realized P&L, liquidation equity and recorded drawdown.

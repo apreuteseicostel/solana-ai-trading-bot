@@ -15,6 +15,8 @@
     <p class="nav-label">WORKSPACE</p>
     <nav aria-label="Main navigation">
       <a href="#overview" data-view="overview" class="active"><span>◫</span> Overview</a>
+      <a href="#signals" data-view="signals"><span>⚡</span> SIGNAL history</a>
+      <a href="#paper-auto" data-view="paper-auto"><span>◉</span> PAPER AUTO status</a>
       <a href="#positions" data-view="positions"><span>▤</span> Paper positions</a>
       <a href="#wallets" data-view="wallets"><span>◎</span> Wallet observations</a>
       <a href="#decisions" data-view="decisions"><span>≋</span> Decision journal</a>
@@ -39,6 +41,8 @@
           <section class="panel"><div class="panel-heading"><div><h2>Recent decisions</h2><p>The reason behind every simulated action</p></div><a href="#decisions" class="text-link">Open journal ↗</a></div><div class="table-scroll" id="recent-table"></div></section>
           <div class="footnote">Research in progress. Network costs are estimates; provider billing is excluded. Simulated results do not establish future profitability.</div>
         </section>
+        <section id="signals" class="view" hidden><div class="section-note">Retrospective records only. A simulated historical BUY is not a current buy recommendation. No automated signal alerts or order execution are available.</div><div class="panel"><div class="panel-heading"><div><h2>Recorded SIGNAL history</h2><p>Selected paper run · bounded to the latest 200 decisions</p></div><span class="tag">NON-ACTIONABLE</span></div><div class="table-scroll" id="signals-table"></div></div></section>
+        <section id="paper-auto" class="view" hidden><div class="section-note">PAPER AUTO is an existing bounded CLI research loop. This page cannot start, pause or stop a background process. Live trading remains disabled.</div><div class="panel"><div class="panel-heading"><div><h2>PAPER AUTO — process status</h2><p>Read-only operational truth, no inferred heartbeat</p></div><span class="status-neutral">NO HEARTBEAT</span></div><dl class="observability" id="paper-auto-info"></dl><div class="panel-footer">CLI entry point: intel watch-paper. Requires explicitly configured read-only provider access. Existing paper decisions do not prove a collector is currently running.</div></div></section>
         <section id="positions" class="view" hidden><div class="section-note">Atomic token quantities are shown without assuming mint decimals. Liquidation values require fresh quotes.</div><div class="panel table-scroll" id="positions-table"></div></section>
         <section id="wallets" class="view" hidden><div class="section-note">Latest database-wide observations, across all experiments. This is an observation log, not a wallet ranking.</div><div class="panel table-scroll" id="wallets-table"></div></section>
         <section id="decisions" class="view" hidden><div class="toolbar"><label for="search">Search journal</label><input id="search" placeholder="Signature, wallet or reason…" type="search"><label for="status">Status</label><select id="status"><option value="all">All decisions</option><option value="filled">Simulated fills</option><option value="rejected">Rejected</option></select><button id="export">Export visible JSON</button></div><p id="decision-count" class="section-note"></p><div class="panel table-scroll" id="decisions-table"></div></section>
