@@ -11,8 +11,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlsplit
 
-from .signal_feed import signal_feed
 from .research_suite import dca_preview, inspect_token, research_brief, trend_research
+from .signal_feed import signal_feed
 
 MAX_ROWS = 200
 
