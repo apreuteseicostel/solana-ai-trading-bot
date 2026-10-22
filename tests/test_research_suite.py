@@ -108,7 +108,7 @@ def test_token_inspection_parses_user_supplied_json_as_unverified():
     assert row["provenance"] == "user_supplied_unverified_jsonparsed_rpc"
 
 
-@pytest.mark.parametrize("request", [
+@pytest.mark.parametrize("evidence_case", [
     {"mint": "invalid!"},
     {"mint": MINT, "rpc_response": []},
     {"mint": MINT, "rpc_response": {"result": {"value": None}}},
@@ -116,9 +116,9 @@ def test_token_inspection_parses_user_supplied_json_as_unverified():
         "owner": "unexpected", "data": {"parsed": {"type": "mint", "info": {}}},
     }}}},
 ])
-def test_token_invalid_evidence_fails_closed(request):
+def test_token_invalid_evidence_fails_closed(evidence_case):
     with pytest.raises((ValueError, TypeError)):
-        inspect_token(request)
+        inspect_token(evidence_case)
 
 
 class FakeConnection:
