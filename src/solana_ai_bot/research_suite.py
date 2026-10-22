@@ -6,7 +6,7 @@ market data. No provider calls, private keys, order execution or DB writes.
 from __future__ import annotations
 
 import re
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from .backtest import BacktestConfig, PriceTick, run_sma_backtest
 
@@ -20,7 +20,7 @@ TOKEN_PROGRAMS = {
 
 def _amount(value, *, ceiling="1000000000"):
     if isinstance(value, bool) or not isinstance(value, (int, str, Decimal)):
-        raise ValueError("Amounts must be decimal strings or integers")
+        raise TypeError("Amounts must be decimal strings or integers")
     try:
         number = Decimal(str(value))
     except InvalidOperation as exc:
@@ -44,7 +44,7 @@ def dca_preview(payload):
     holdings = payload.get("holdings")
     targets = payload.get("targets")
     if not isinstance(holdings, dict) or not isinstance(targets, dict):
-        raise ValueError("Holdings and targets must be objects")
+        raise TypeError("Holdings and targets must be objects")
     if not 1 <= len(holdings) <= 10 or set(holdings) != set(targets):
         raise ValueError("Use 1..10 matching asset names")
     if any(not isinstance(a, str) or not re.fullmatch(r"[A-Z0-9]{2,12}", a)
@@ -196,7 +196,7 @@ def inspect_token(payload):
     if rpc is None:
         return result
     if not isinstance(rpc, dict):
-        raise ValueError("RPC evidence must be a JSON object")
+        raise TypeError("RPC evidence must be a JSON object")
     try:
         account = rpc["result"]["value"]
         owner = account["owner"]
@@ -204,7 +204,7 @@ def inspect_token(payload):
         info = parsed["info"]
     except (TypeError, KeyError) as exc:
         raise ValueError("Unsupported jsonParsed getAccountInfo structure") from exc
-    if owner not in TOKEN_PROGRAMS or parsed.get("type") != "mint" or not isinstance(info, dict):
+    if not isinstance(owner, str) or owner not in TOKEN_PROGRAMS or parsed.get("type") != "mint" or not isinstance(info, dict):
         raise ValueError("Not a recognised SPL token mint account")
     if ("mintAuthority" not in info or "freezeAuthority" not in info or
             not isinstance(info.get("decimals"), int) or
