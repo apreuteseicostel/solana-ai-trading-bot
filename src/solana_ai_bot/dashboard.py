@@ -11,6 +11,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlsplit
 
+from .signal_feed import signal_feed
+
 MAX_ROWS = 200
 
 
@@ -63,6 +65,14 @@ def snapshot(database: Path, run_id: str | None = None, *, now: int | None = Non
             - state["cash_raw"] - sum(p["cost_raw"] for p in positions.values()),
             "equity_status": "fresh_quote_marks" if fresh else "unknown_stale_or_missing_marks",
             "recent_decisions": decisions[:MAX_ROWS],
+            "signal_feed": signal_feed(decisions[:MAX_ROWS]),
+            "signal_feed_type": "retrospective_paper_decisions_not_live_alerts",
+            "paper_auto": {
+                "mode": "bounded_cli_session_only",
+                "service_status": "unknown_no_heartbeat",
+                "dashboard_control": False,
+                "execution": "paper_only",
+            },
             "decisions_truncated": len(decisions) > MAX_ROWS,
             "observations": observations[:MAX_ROWS],
             "observations_truncated": len(observations) > MAX_ROWS,
