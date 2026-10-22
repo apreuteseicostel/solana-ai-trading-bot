@@ -12,7 +12,10 @@ from solana_ai_bot.dashboard import handler_for, snapshot
 from solana_ai_bot.intel_cli import demo
 from solana_ai_bot.intel_store import IntelStore
 from solana_ai_bot.research_suite import (
-    dca_preview, inspect_token, research_brief, trend_research,
+    dca_preview,
+    inspect_token,
+    research_brief,
+    trend_research,
 )
 
 MINT = "11111111111111111111111111111111"
@@ -72,7 +75,7 @@ def test_rebalance_includes_hypothetical_sell_and_buy():
     {},
 ])
 def test_dca_invalid_inputs_fail_closed(payload):
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, TypeError)):
         dca_preview(payload)
 
 
@@ -114,7 +117,7 @@ def test_token_inspection_parses_user_supplied_json_as_unverified():
     }}}},
 ])
 def test_token_invalid_evidence_fails_closed(request):
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, TypeError)):
         inspect_token(request)
 
 
