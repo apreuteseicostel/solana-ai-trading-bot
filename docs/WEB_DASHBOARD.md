@@ -23,6 +23,10 @@ book and deletes it on shutdown. The demo is always labelled synthetic and never
 contacts a provider. An existing database is opened with SQLite `mode=ro` and
 `query_only=ON`; an absent database or run is never created by the read API.
 
+## Four-module research suite
+
+Adds trend-following SMA synthetic test, DCA/rebalance calculator, deterministic research brief and user-supplied SPL mint parser. Compute-only JSON POST endpoints never route orders or write SQLite; see [Research Suite](RESEARCH_SUITE.md). No verified price history, real LLM or live on-chain authority/holder/liquidity scan is connected.
+
 ## SIGNAL / PAPER AUTO increment
 
 The dashboard now displays a non-actionable historical SIGNAL journal mapped from
