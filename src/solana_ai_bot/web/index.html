@@ -24,6 +24,7 @@
       <a href="#positions" data-view="positions"><span>▤</span> Paper positions</a>
       <a href="#wallets" data-view="wallets"><span>◎</span> Wallet observations</a>
       <a href="#decisions" data-view="decisions"><span>≋</span> Decision journal</a>
+      <a href="#market" data-view="market"><span>⌁</span> Data sources / Kronos</a>
       <a href="#limits" data-view="limits"><span>⚙</span> Experiment limits</a>
     </nav>
     <div class="sidebar-bottom"><span class="mode-dot"></span> Observation & simulation<small>No live order execution</small></div>
@@ -86,6 +87,30 @@
         <section id="positions" class="view" hidden><div class="section-note">Atomic token quantities are shown without assuming mint decimals. Liquidation values require fresh quotes.</div><div class="panel table-scroll" id="positions-table"></div></section>
         <section id="wallets" class="view" hidden><div class="section-note">Latest database-wide observations, across all experiments. This is an observation log, not a wallet ranking.</div><div class="panel table-scroll" id="wallets-table"></div></section>
         <section id="decisions" class="view" hidden><div class="toolbar"><label for="search">Search journal</label><input id="search" placeholder="Signature, wallet or reason…" type="search"><label for="status">Status</label><select id="status"><option value="all">All decisions</option><option value="filled">Simulated fills</option><option value="rejected">Rejected</option></select><button id="export">Export visible JSON</button></div><p id="decision-count" class="section-note"></p><div class="panel table-scroll" id="decisions-table"></div></section>
+        <section id="market" class="view" hidden>
+          <div class="section-note">Core research: BTC, ETH and SOL. These assets can still be volatile. Data selection does not change the paper book or enable trading.</div>
+          <div class="panel">
+            <div class="panel-heading"><div><h2>Market data sources</h2><p>Choose the source used for this OHLCV research request</p></div><span class="tag">READ ONLY</span></div>
+            <div class="tool-grid">
+              <div><label for="market-primary">Primary provider</label><select id="market-primary"></select></div>
+              <div><label for="market-backup">Backup provider</label><select id="market-backup"></select></div>
+              <div><label for="market-exchange">Exchange / market</label><select id="market-exchange"><option>Binance spot</option></select></div>
+              <div><label for="market-pair">Trading pair</label><select id="market-pair"></select></div>
+              <div><label for="market-interval">Candle interval (UTC)</label><select id="market-interval"></select></div>
+              <div><label for="market-limit">Closed candles</label><input id="market-limit" type="number" min="32" max="512" step="1" value="128"></div>
+            </div>
+            <button id="market-save" type="button" disabled>Save preferences in this browser</button>
+            <button id="market-fetch" type="button" disabled>Fetch public candles</button>
+            <p id="market-message" class="section-note" role="status">Loading provider options…</p>
+            <dl id="market-status" class="observability"></dl>
+            <div class="table-scroll" id="market-candles"></div>
+            <div class="panel-footer">Both endpoints provide Binance spot data; backup is endpoint redundancy, not independent market confirmation. No automatic refresh. Helius wallet events and Jupiter quotes are separate data products. USDT is not assumed equivalent to USDC.</div>
+          </div>
+          <div class="panel"><div class="panel-heading"><h2>Kronos-mini integration</h2><span class="tag">MODEL NOT LOADED</span></div>
+            <p class="section-note">Closed OHLCV and quote turnover can now be prepared for Kronos-mini with the 2k tokenizer. Model weights, inference and strategy comparison are not connected yet. No forecast is displayed.</p>
+            <p class="section-note">Planned portfolio separation: core trading/DCA and a separate early-project module capped at 1% in total. The early-project module is not enabled.</p>
+          </div>
+        </section>
         <section id="limits" class="view" hidden><div class="section-note">Immutable settings recorded with this experiment. Changing a running paper book is not supported by this interface.</div><div class="panel"><div class="panel-heading"><h2>Recorded experiment limits</h2><span class="tag">READ ONLY</span></div><dl id="config" class="config-grid"></dl></div></section>
       </div>
       <footer><span><span class="mode-dot"></span> Local read-only dashboard</span><span id="updated">Awaiting snapshot</span></footer>
