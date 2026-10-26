@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 let data = null;
 let busy = false;
 const titles = {
+  market: ['Data sources / Kronos', 'Select OHLCV sources and inspect closed candles for core-asset research.'],
   overview: ['Research overview', 'Follow observations. Inspect decisions. Measure the experiment.'],
   signals: ['SIGNAL history', 'Review historic simulated decisions; not live trade alerts.'],
   'paper-auto': ['PAPER AUTO status', 'Inspect bounded paper simulation and its unknown process health.'],
@@ -255,3 +256,73 @@ $('export').addEventListener('click', () => {
   const link = el('a'); link.href = url; link.download = 'paper-decisions.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 window.addEventListener('hashchange', route); route(); refresh();
+
+const marketFields = ['primary', 'backup', 'pair', 'interval', 'limit'];
+const marketStorageKey = 'signal-desk-market-settings-v1';
+let marketBusy = false;
+function marketSettings() {
+  return Object.fromEntries(marketFields.map(key => [key,
+    key === 'limit' ? Number($('market-' + key).value) : $('market-' + key).value]));
+}
+function setMarketSettings(settings) {
+  marketFields.forEach(key => { $('market-' + key).value = settings[key]; });
+}
+async function initMarket() {
+  try {
+    const response = await fetch('/api/market/catalogue', {signal: AbortSignal.timeout(10000)});
+    if (!response.ok) throw new Error('Catalogue unavailable');
+    const catalog = await response.json();
+    const option = (id, label) => {const node = el('option', label); node.value = id; return node;};
+    $('market-primary').replaceChildren(...catalog.providers.map(p => option(p.id, p.label)));
+    $('market-backup').replaceChildren(option('none', 'Disabled'), ...catalog.providers.map(p => option(p.id, p.label)));
+    $('market-pair').replaceChildren(...catalog.pairs.map(p => option(p, p)));
+    $('market-interval').replaceChildren(...catalog.intervals.map(p => option(p, p)));
+    setMarketSettings(catalog.defaults);
+    let restored = false;
+    try {
+      const raw = localStorage.getItem(marketStorageKey);
+      if (raw) {
+        const result = await localCalculation('/api/market/settings', JSON.parse(raw));
+        setMarketSettings(result.settings); restored = true;
+      }
+    } catch { /* Invalid or unavailable local storage falls back to server defaults. */ }
+    $('market-message').textContent = restored ? 'Browser preferences restored. No provider request made.' : 'Default settings ready. No provider request made.';
+    $('market-save').disabled = false; $('market-fetch').disabled = false;
+  } catch { $('market-message').textContent = 'Provider settings unavailable. Reload to retry.'; }
+}
+async function marketAction(fetchData) {
+  if (marketBusy) return;
+  marketBusy = true;
+  $('market-save').disabled = true; $('market-fetch').disabled = true;
+  const requested = marketSettings();
+  $('market-status').replaceChildren(); $('market-candles').replaceChildren();
+  $('market-message').textContent = fetchData ? 'Requesting a bounded public candle history…' : 'Validating preferences…';
+  try {
+    if (!fetchData) {
+      const result = await localCalculation('/api/market/settings', requested);
+      try {
+        localStorage.setItem(marketStorageKey, JSON.stringify(result.settings));
+        $('market-message').textContent = 'Saved in this browser. No provider call or paper-book change.';
+      } catch { $('market-message').textContent = 'Settings valid, but browser storage is unavailable. Preferences were not saved.'; }
+    } else {
+      const result = await localCalculation('/api/market/candles', requested);
+      keyValue($('market-status'), 'Returned market', result.settings.pair + ' · ' + result.settings.interval + ' · ' + result.exchange);
+      keyValue($('market-status'), 'Accepted source', result.provider);
+      keyValue($('market-status'), 'Backup used', result.fallback_used ? 'Yes' : 'No');
+      keyValue($('market-status'), 'Observed at', date(result.observed_at));
+      keyValue($('market-status'), 'Closed candles', result.candles.length);
+      keyValue($('market-status'), 'Kronos', 'Input available · model not loaded · no forecast');
+      table('market-candles', ['Open time', 'Open', 'High', 'Low', 'Close', 'Base volume'],
+        result.candles.slice(-12).map(c => [date(c.timestamp), c.open, c.high, c.low, c.close, c.volume]), 'No closed candles.');
+      $('market-message').textContent = 'Validated public history · latest 12 candles shown · no trades or forecast generated. Refresh explicitly when needed.';
+    }
+  } catch { $('market-message').textContent = 'Unavailable: check settings, connectivity and source availability. Missing, stale or invalid histories are rejected; no substitute prices generated.'; }
+  finally {marketBusy = false; $('market-save').disabled = false; $('market-fetch').disabled = false;}
+}
+$('market-save').addEventListener('click', () => marketAction(false));
+$('market-fetch').addEventListener('click', () => marketAction(true));
+marketFields.forEach(key => $('market-' + key).addEventListener('change', () => {
+  $('market-status').replaceChildren(); $('market-candles').replaceChildren();
+  $('market-message').textContent = 'Selection changed. Save preferences or fetch a new history.';
+}));
+initMarket();

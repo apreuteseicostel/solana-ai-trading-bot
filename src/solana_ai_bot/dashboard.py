@@ -1,4 +1,4 @@
-"""Local read-only dashboard. No provider calls or database mutations."""
+"""Local research dashboard. Explicit public candle reads; no database mutations."""
 
 import argparse
 import json
@@ -11,6 +11,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import parse_qs, urlsplit
 
+from .candles import CandleSettings, catalogue, fetch_candles, settings_preview
+from .intel_http import ProviderError
 from .research_suite import dca_preview, inspect_token, research_brief, trend_research
 from .signal_feed import signal_feed
 
@@ -117,6 +119,8 @@ def handler_for(database: Path):
             if target.path in assets:
                 name, mime = assets[target.path]
                 self.respond(200, files("solana_ai_bot").joinpath("web", name).read_bytes(), mime)
+            elif target.path == "/api/market/catalogue":
+                self.respond(200, json.dumps(catalogue()).encode(), "application/json")
             elif target.path == "/api/snapshot":
                 query = parse_qs(target.query)
                 if set(query) - {"run_id"} or len(query.get("run_id", [])) > 1:
@@ -133,8 +137,9 @@ def handler_for(database: Path):
                 self.respond(404, b'{"error":"Not found"}', "application/json")
 
         def do_POST(self):
-            # Read-only computations, not commands or order-routing endpoints.
-            if self.path not in ("/api/dca/preview", "/api/token/inspect"):
+            # Local computations and explicit bounded public reads; no order routing.
+            if self.path not in ("/api/dca/preview", "/api/token/inspect",
+                                  "/api/market/settings", "/api/market/candles"):
                 self.respond(501, b'{"error":"Write methods unavailable"}', "application/json")
                 return
             if self.headers.get("Host") != f"127.0.0.1:{self.server.server_port}":
@@ -159,10 +164,17 @@ def handler_for(database: Path):
                 return
             try:
                 payload = json.loads(self.rfile.read(length))
-                result = (
-                    dca_preview(payload) if self.path == "/api/dca/preview"
-                    else inspect_token(payload)
-                )
+                if self.path == "/api/market/candles":
+                    result = fetch_candles(CandleSettings.parse(payload), now=int(time.time()))
+                else:
+                    calculate = {"/api/dca/preview": dca_preview,
+                                 "/api/token/inspect": inspect_token,
+                                 "/api/market/settings": settings_preview}[self.path]
+                    result = calculate(payload)
+            except ProviderError:
+                self.respond(503, b'{"error":"No complete fresh history available"}',
+                             "application/json")
+                return
             except (ValueError, TypeError, KeyError, OverflowError):
                 self.respond(400, b'{"error":"Invalid inputs or unsupported evidence"}',
                              "application/json")

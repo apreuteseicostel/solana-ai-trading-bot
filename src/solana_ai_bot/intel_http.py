@@ -45,10 +45,14 @@ class JsonTransport:
         allowed = {
             ("POST", "mainnet.helius-rpc.com", "/v1/parsed-events/transaction-history"),
             ("GET", "api.jup.ag", "/swap/v2/order"),
+            ("GET", "data-api.binance.vision", "/api/v3/klines"),
+            ("GET", "api.binance.com", "/api/v3/klines"),
         }
         if (
             target.scheme != "https"
             or target.port is not None
+            or target.username is not None
+            or target.password is not None
             or (method, target.hostname, target.path) not in allowed
         ):
             raise ProviderError("Endpoint is outside the read-only allowlist")
@@ -75,7 +79,8 @@ class JsonTransport:
                     if len(content) > 4_000_000:
                         raise ProviderError("Provider response exceeded size limit")
                     result = json.loads(content)
-                    if not isinstance(result, dict):
+                    expected_type = list if target.path == "/api/v3/klines" else dict
+                    if not isinstance(result, expected_type):
                         raise ProviderError("Invalid provider response shape")
                     return result
             except HTTPError as exc:

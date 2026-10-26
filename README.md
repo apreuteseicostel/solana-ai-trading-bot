@@ -10,6 +10,7 @@ python -m solana_ai_bot intel demo --db data/demo.sqlite --run-id demo --html da
 
 Open `data/demo.html` for a synthetic demonstration, not a performance claim.
 
+- [Core market sources and Kronos preparation](docs/KRONOS_MARKET_DATA.md): selectable public OHLCV endpoints, closed-candle validation and explicit model readiness.
 - [Research Suite: Trend, DCA, reports and token inspection](docs/RESEARCH_SUITE.md): offline calculations and unverified-source warnings, zero live trading.
 - [SIGNAL history + PAPER AUTO status](docs/SIGNAL_PAPER_AUTO.md): read-only historical signal journal and bounded paper loop visibility; no live order routing.
 - [Market Intelligence V1](docs/MARKET_INTELLIGENCE.md): Helius wallet history,
@@ -29,5 +30,4 @@ python -m solana_ai_bot.dashboard --demo
 ```
 
 Open http://127.0.0.1:8765 for an isolated synthetic demo, or pass `--db`
-with an existing intelligence database. Local, read-only, no provider calls or
-live execution. See [dashboard documentation](docs/WEB_DASHBOARD.md).
+with an existing intelligence database. Local and read-only. Public candle requests are explicit; no live execution. See [dashboard documentation](docs/WEB_DASHBOARD.md).
